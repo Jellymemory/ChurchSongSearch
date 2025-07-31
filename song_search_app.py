@@ -9,7 +9,7 @@ st.set_page_config(page_title="歌曲演唱记录查询系统", layout="wide")
 st.title("🎵 歌曲演唱记录查询系统")
 
 # 文件路径
-FILE_PATH = Weekly Report Data Extracted_processed_21072025_FINAL_Test.xlsx
+FILE_PATH = “Weekly Report Data Extracted_processed_21072025_FINAL_Test.xlsx”
 
 
 # 加载数据
