@@ -157,44 +157,73 @@ if search_term:
         else:
             st.warning("抱歉，您搜索的歌名过去5年没有被演唱。")
 
+import pandas as pd
+import streamlit as st
+from datetime import datetime
+import pypinyin
+from pypinyin import Style
+
+# 设置页面
+st.set_page_config(page_title="歌曲演唱记录查询系统", layout="wide")
+st.title("🎵 歌曲演唱记录查询系统")
+
+# 加载数据（使用您的实际数据加载方式）
+@st.cache_data
+def load_data():
+    # 这里替换为您的实际数据加载代码
+    df = pd.DataFrame()  # 示例
+    return df
+
+df = load_data()
+
+# 获取拼音排序键
+def get_pinyin_sort_key(text):
+    try:
+        # 获取每个字的拼音首字母
+        initials = pypinyin.lazy_pinyin(text, style=Style.FIRST_LETTER)
+        return ''.join(initials).lower()
+    except:
+        return ''
+
 # 侧边栏显示统计数据
 with st.sidebar:
     st.header("📊 统计数据")
     
-    # 统计信息展示（自动适应移动端）
+    # 统计信息展示
     col1, col2 = st.columns(2)
     with col1:
         st.metric("总演唱记录", len(df))
     with col2:
         st.metric("歌曲总数", len(df['Simplified'].dropna().unique()))
     
-    # 全屏切换按钮（移动端加大点击区域）
+    # 全屏切换按钮
     st.button("↔️ 全屏显示统计", 
              use_container_width=True,
-             key="toggle_fullscreen",
-             help="点击切换全屏/侧边栏模式")
+             key="toggle_fullscreen")
     
-    st.markdown("---")  # 分隔线
+    st.markdown("---")
     
     # 所有歌曲统计
     st.subheader("🎵 歌曲演唱统计")
     
-    # 恢复单选按钮排序方式
+    # 单选按钮排序方式
     sort_option = st.radio("排序方式:",
-                         ["演唱次数↓", "歌曲名A→Z"],
+                         ["演唱次数↓", "歌曲名(A-Z)"],
                          index=0,
-                         horizontal=True,
-                         label_visibility="collapsed")  # 隐藏标签节省空间
+                         horizontal=True)
     
     # 获取统计数据
     song_stats = df['Simplified'].value_counts().reset_index()
     song_stats.columns = ['歌曲名', '演唱次数']
     
-    # 排序逻辑（不再需要拼音列）
+    # 排序逻辑
     if sort_option == "演唱次数↓":
         song_stats = song_stats.sort_values('演唱次数', ascending=False)
     else:
-        song_stats = song_stats.sort_values('歌曲名', ascending=True)
+        # 添加临时拼音排序列（不显示）
+        song_stats['_pinyin_sort'] = song_stats['歌曲名'].apply(get_pinyin_sort_key)
+        song_stats = song_stats.sort_values('_pinyin_sort', ascending=True)
+        song_stats = song_stats.drop(columns=['_pinyin_sort'])
     
     # 响应式表格设置
     st.dataframe(
@@ -202,28 +231,21 @@ with st.sidebar:
         height=400,
         use_container_width=True,
         column_config={
-            "歌曲名": st.column_config.TextColumn(
-                width="medium" if st.session_state.get('is_mobile', False) else "large"
-            ),
-            "演唱次数": st.column_config.NumberColumn(
-                "次数" if st.session_state.get('is_mobile', False) else "演唱次数",
-                width="small",
-                format="%d"
-            )
+            "歌曲名": st.column_config.TextColumn(width="large"),
+            "演唱次数": st.column_config.NumberColumn(format="%d")
         },
         hide_index=True
     )
 
-# 全屏模式（优化移动端显示）
+# 全屏模式
 if st.session_state.get('toggle_fullscreen', False):
     st.header("📊 全屏统计模式")
     
-    # 返回按钮
     if st.button("← 返回侧边栏模式", type="primary"):
         st.session_state.toggle_fullscreen = False
         st.rerun()
     
-    # 全屏表格（自动适应设备）
+    # 全屏表格（保持相同排序）
     st.dataframe(
         song_stats,
         height=600,
@@ -234,29 +256,18 @@ if st.session_state.get('toggle_fullscreen', False):
         hide_index=True
     )
 
-# 移动端检测和样式调整
+# 移动端优化
 st.markdown("""
     <style>
         @media screen and (max-width: 600px) {
-            /* 手机端单选按钮组样式 */
             div[role="radiogroup"] > label {
                 padding: 8px 12px;
                 margin: 2px;
+                font-size: 14px;
             }
-            /* 表格字体调整 */
             .stDataFrame {
                 font-size: 14px !important;
             }
         }
     </style>
-    <script>
-    // 自动检测移动设备
-    function checkMobile() {
-        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
-        if (isMobile) {
-            window.parent.postMessage({type: 'setIsMobile', value: true}, '*');
-        }
-    }
-    checkMobile();
-    </script>
 """, unsafe_allow_html=True)
