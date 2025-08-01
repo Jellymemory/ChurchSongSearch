@@ -161,8 +161,8 @@ if search_term:
 with st.sidebar:
     st.header("统计数据")
     st.write(f"数据集包含 {len(df)} 条演唱记录")
-    st.write(f"涵盖 {len(df['Simplified'].dropna().unique())} 首不同歌曲(简体)")
-    st.write(f"涵盖 {len(df['Traditional'].dropna().unique())} 首不同歌曲(繁体)")
+    st.write(f"涵盖 {len(df['Simplified'].dropna().unique())} 首不同歌曲")
+    
     
     # 显示所有歌曲并按需排序
     st.subheader("所有歌曲演唱统计(简体)")
