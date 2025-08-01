@@ -159,39 +159,108 @@ if search_term:
 
 # 侧边栏显示统计数据
 with st.sidebar:
-    st.header("统计数据")
-    st.write(f"数据集包含 {len(df)} 条演唱记录")
-    st.write(f"涵盖 {len(df['Simplified'].dropna().unique())} 首不同歌曲")
+    st.header("📊 统计数据")
     
+    # 使用columns布局统计信息
+    col1, col2 = st.columns(2)
+    with col1:
+        st.metric("总演唱记录", len(df))
+    with col2:
+        st.metric("歌曲总数(简体)", len(df['Simplified'].dropna().unique()))
+    
+    # 添加明显的全屏切换按钮
+    if st.button("↔️ 全屏显示歌曲统计", 
+                help="点击后在主页面全屏显示歌曲统计表",
+                use_container_width=True):
+        st.session_state['show_fullscreen_stats'] = True
+    
+    # 分隔线
+    st.markdown("---")
     
     # 显示所有歌曲并按需排序
-    st.subheader("所有歌曲演唱统计(简体)")
+    st.subheader("🎵 所有歌曲演唱统计")
     
-    # 创建排序选项
-    sort_option = st.radio("排序方式:", 
-                         ["按演唱次数降序", "按歌曲名(A-Z)"],
-                         index=0)
+    # 创建排序选项（使用更紧凑的布局）
+    sort_col1, sort_col2 = st.columns([1, 2])
+    with sort_col1:
+        sort_option = st.radio("排序方式:", 
+                             ["演唱次数↓", "歌曲名A-Z"],
+                             index=0,
+                             horizontal=True)
     
     # 获取所有歌曲统计数据
     song_stats = df['Simplified'].value_counts().reset_index()
-    song_stats.columns = ['歌曲名', '演唱次数']  # 正确设置列名
-    
-    # 添加拼音首字母列用于排序
+    song_stats.columns = ['歌曲名', '演唱次数']
     song_stats['拼音首字母'] = song_stats['歌曲名'].apply(get_pinyin_initial)
     
     # 根据选择排序
-    if sort_option == "按演唱次数降序":
+    if sort_option == "演唱次数↓":
         song_stats = song_stats.sort_values('演唱次数', ascending=False)
     else:
         song_stats = song_stats.sort_values('拼音首字母', ascending=True)
     
-    # 显示表格（使用st.dataframe实现可排序）
+    # 优化表格显示
     st.dataframe(
-        song_stats[['歌曲名', '演唱次数']],  # 不显示拼音首字母列
-        height=600,
+        song_stats[['歌曲名', '演唱次数']],
+        height=500,
         use_container_width=True,
         column_config={
-            "歌曲名": st.column_config.TextColumn("歌曲名"),
-            "演唱次数": st.column_config.NumberColumn("演唱次数")
-        }
+            "歌曲名": st.column_config.TextColumn(
+                "歌曲名",
+                width="medium"  # 调整列宽
+            ),
+            "演唱次数": st.column_config.NumberColumn(
+                "演唱次数",
+                width="small",
+                format="%d"  # 整数格式
+            )
+        },
+        hide_index=True
+    )
+
+# 全屏显示逻辑
+if st.session_state.get('show_fullscreen_stats', False):
+    st.header("🎵 全屏歌曲统计")
+    
+    # 添加退出全屏按钮
+    if st.button("← 返回正常视图"):
+        st.session_state['show_fullscreen_stats'] = False
+        st.rerun()
+    
+    # 显示完整统计表格
+    song_stats = df['Simplified'].value_counts().reset_index()
+    song_stats.columns = ['歌曲名', '演唱次数']
+    
+    # 使用更宽的全屏布局
+    col1, col2 = st.columns([1, 3])
+    with col1:
+        sort_option_full = st.radio("排序方式:", 
+                                  ["演唱次数↓", "歌曲名A-Z"],
+                                  index=0,
+                                  key="fullscreen_sort")
+    
+    with col2:
+        st.write("")  # 占位符
+    
+    if sort_option_full == "演唱次数↓":
+        song_stats = song_stats.sort_values('演唱次数', ascending=False)
+    else:
+        song_stats['拼音首字母'] = song_stats['歌曲名'].apply(get_pinyin_initial)
+        song_stats = song_stats.sort_values('拼音首字母', ascending=True)
+    
+    st.dataframe(
+        song_stats[['歌曲名', '演唱次数']],
+        height=700,
+        column_config={
+            "歌曲名": st.column_config.TextColumn(
+                "歌曲名",
+                width="large"
+            ),
+            "演唱次数": st.column_config.NumberColumn(
+                "演唱次数",
+                width="medium",
+                format="%d"
+            )
+        },
+        hide_index=True
     )
