@@ -157,24 +157,6 @@ if search_term:
         else:
             st.warning("抱歉，您搜索的歌名过去5年没有被演唱。")
 
-import pandas as pd
-import streamlit as st
-from datetime import datetime
-import pypinyin
-from pypinyin import Style
-
-# 设置页面
-st.set_page_config(page_title="歌曲演唱记录查询系统", layout="wide")
-st.title("🎵 歌曲演唱记录查询系统")
-
-# 加载数据（使用您的实际数据加载方式）
-@st.cache_data
-def load_data():
-    # 这里替换为您的实际数据加载代码
-    df = pd.DataFrame()  # 示例
-    return df
-
-df = load_data()
 
 # 获取拼音排序键
 def get_pinyin_sort_key(text):
