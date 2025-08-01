@@ -158,14 +158,6 @@ if search_term:
             st.warning("抱歉，您搜索的歌名过去5年没有被演唱。")
 
 
-# 获取拼音排序键
-def get_pinyin_sort_key(text):
-    try:
-        # 获取每个字的拼音首字母
-        initials = pypinyin.lazy_pinyin(text, style=Style.FIRST_LETTER)
-        return ''.join(initials).lower()
-    except:
-        return ''
 
 # 侧边栏显示统计数据
 with st.sidebar:
