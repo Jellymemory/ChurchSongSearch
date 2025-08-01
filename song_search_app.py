@@ -164,9 +164,9 @@ with st.sidebar:
     # 使用columns布局统计信息
     col1, col2 = st.columns(2)
     with col1:
-        st.metric("总演唱记录", len(df))
+        st.metric("过去5年总演唱记录", len(df))
     with col2:
-        st.metric("歌曲总数(简体)", len(df['Simplified'].dropna().unique()))
+        st.metric("歌曲总数", len(df['Simplified'].dropna().unique()))
     
     # 添加明显的全屏切换按钮
     if st.button("↔️ 全屏显示歌曲统计", 
