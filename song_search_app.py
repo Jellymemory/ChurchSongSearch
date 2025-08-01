@@ -161,39 +161,40 @@ if search_term:
 with st.sidebar:
     st.header("📊 统计数据")
     
-    # 使用columns布局统计信息（移动端自动堆叠）
-    cols = st.columns(2)
-    with cols[0]:
+    # 统计信息展示（自动适应移动端）
+    col1, col2 = st.columns(2)
+    with col1:
         st.metric("总演唱记录", len(df))
-    with cols[1]:
+    with col2:
         st.metric("歌曲总数", len(df['Simplified'].dropna().unique()))
     
-    # 全屏按钮（添加手机端样式）
-    st.button("↔️ 全屏显示统计表", 
+    # 全屏切换按钮（移动端加大点击区域）
+    st.button("↔️ 全屏显示统计", 
              use_container_width=True,
-             help="点击后全屏查看完整表格",
-             key="fullscreen_btn")
+             key="toggle_fullscreen",
+             help="点击切换全屏/侧边栏模式")
     
-    st.markdown("---")
+    st.markdown("---")  # 分隔线
     
-    # 显示所有歌曲统计
+    # 所有歌曲统计
     st.subheader("🎵 歌曲演唱统计")
     
-    # 移动端友好的排序选项
-    sort_option = st.selectbox("排序方式:", 
-                            ["演唱次数（高→低）", "歌曲名（A-Z）"],
-                            index=0)
+    # 恢复单选按钮排序方式
+    sort_option = st.radio("排序方式:",
+                         ["演唱次数↓", "歌曲名A→Z"],
+                         index=0,
+                         horizontal=True,
+                         label_visibility="collapsed")  # 隐藏标签节省空间
     
-    # 获取并处理数据
+    # 获取统计数据
     song_stats = df['Simplified'].value_counts().reset_index()
     song_stats.columns = ['歌曲名', '演唱次数']
     
-    # 根据选择排序
-    if "演唱次数" in sort_option:
+    # 排序逻辑（不再需要拼音列）
+    if sort_option == "演唱次数↓":
         song_stats = song_stats.sort_values('演唱次数', ascending=False)
     else:
-        song_stats['拼音首字母'] = song_stats['歌曲名'].apply(get_pinyin_initial)
-        song_stats = song_stats.sort_values('拼音首字母', ascending=True)
+        song_stats = song_stats.sort_values('歌曲名', ascending=True)
     
     # 响应式表格设置
     st.dataframe(
@@ -202,24 +203,54 @@ with st.sidebar:
         use_container_width=True,
         column_config={
             "歌曲名": st.column_config.TextColumn(
-                "歌曲名",
-                width="medium" if st.session_state.get('is_mobile', False) else "large",
-                help="点击列标题可临时排序"
+                width="medium" if st.session_state.get('is_mobile', False) else "large"
             ),
             "演唱次数": st.column_config.NumberColumn(
-                "次数",
+                "次数" if st.session_state.get('is_mobile', False) else "演唱次数",
                 width="small",
-                format="%d",
-                help="演唱次数"
+                format="%d"
             )
         },
         hide_index=True
     )
 
-# 检测移动设备
-st.markdown(
-    """
+# 全屏模式（优化移动端显示）
+if st.session_state.get('toggle_fullscreen', False):
+    st.header("📊 全屏统计模式")
+    
+    # 返回按钮
+    if st.button("← 返回侧边栏模式", type="primary"):
+        st.session_state.toggle_fullscreen = False
+        st.rerun()
+    
+    # 全屏表格（自动适应设备）
+    st.dataframe(
+        song_stats,
+        height=600,
+        column_config={
+            "歌曲名": st.column_config.TextColumn(width="large"),
+            "演唱次数": st.column_config.NumberColumn(format="%d")
+        },
+        hide_index=True
+    )
+
+# 移动端检测和样式调整
+st.markdown("""
+    <style>
+        @media screen and (max-width: 600px) {
+            /* 手机端单选按钮组样式 */
+            div[role="radiogroup"] > label {
+                padding: 8px 12px;
+                margin: 2px;
+            }
+            /* 表格字体调整 */
+            .stDataFrame {
+                font-size: 14px !important;
+            }
+        }
+    </style>
     <script>
+    // 自动检测移动设备
     function checkMobile() {
         const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
         if (isMobile) {
@@ -228,36 +259,4 @@ st.markdown(
     }
     checkMobile();
     </script>
-    """,
-    unsafe_allow_html=True
-)
-
-# 初始化移动端状态
-if 'is_mobile' not in st.session_state:
-    st.session_state.is_mobile = False
-
-# 全屏显示逻辑（优化移动端显示）
-if st.session_state.get('fullscreen_btn', False):
-    st.header("📊 全屏统计模式")
-    
-    # 返回按钮（移动端更明显）
-    st.button("← 返回", type="primary", use_container_width=True)
-    
-    # 移动端专用布局
-    if st.session_state.is_mobile:
-        col1, col2 = st.columns([3, 2])  # 手机端歌曲名列更宽
-    else:
-        col1, col2 = st.columns([4, 1])  # 电脑端正常比例
-        
-    with col1:
-        st.dataframe(
-            song_stats[['歌曲名']],
-            use_container_width=True,
-            hide_index=True
-        )
-    with col2:
-        st.dataframe(
-            song_stats[['演唱次数']],
-            use_container_width=True,
-            hide_index=True
-        )
+""", unsafe_allow_html=True)
