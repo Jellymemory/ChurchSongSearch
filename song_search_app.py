@@ -9,7 +9,7 @@ st.set_page_config(page_title="歌曲演唱记录查询系统", layout="wide")
 st.title("🎵 歌曲演唱记录查询系统")
 
 # GitHub raw文件URL（直接使用你的文件路径）
-GITHUB_RAW_URL = "https://github.com/Jellymemory/ChurchSongSearch/raw/cdddd2d01fcd939fb66d41b73a2e8f056dd18cb5/Weekly%20Report%20Data%20Extracted_processed_08092025_FINAL.xlsx"
+GITHUB_RAW_URL = "https://github.com/Jellymemory/ChurchSongSearch/raw/refs/heads/main/Weekly%20Report%20Data%20Extracted_processed_08092025_FINAL.xlsx"
 
 # 加载数据
 @st.cache_data(ttl=3600)  # 缓存1小时
