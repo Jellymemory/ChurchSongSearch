@@ -9,14 +9,14 @@ st.set_page_config(page_title="歌曲演唱记录查询系统", layout="wide")
 st.title("🎵 歌曲演唱记录查询系统")
 
 # GitHub raw文件URL（直接使用你的文件路径）
-GITHUB_RAW_URL ="https://github.com/Jellymemory/ChurchSongSearch/raw/refs/heads/main/Weekly%20Report%20Data%20Extracted_processed_08092025_FINAL.xlsx"
+GITHUB_RAW_URL = "https://raw.githubusercontent.com/Jellymemory/ChurchSongSearch/main/Weekly%20Report%20Data%20Extracted_processed_08092025_FINAL.xlsx"
 
 # 加载数据
 @st.cache_data(ttl=3600)  # 缓存1小时
 def load_data():
     try:
         # 直接从GitHub raw读取Excel文件
-        df = pd.read_excel(GITHUB_RAW_URL, engine='openpyxl')
+        df = pd.read_excel(GITHUB_RAW_URL, engine="openpyxl")
         
         # 重命名列
         df = df.rename(columns={
